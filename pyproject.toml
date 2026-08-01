@@ -1,0 +1,26 @@
+[project]
+name = "tokenlens"
+version = "0.1.0"
+description = "Local-first token and cost estimator for AI prompts"
+requires-python = ">=3.11"
+
+[project.scripts]
+tokenlens = "tokenlens.cli:main"
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
