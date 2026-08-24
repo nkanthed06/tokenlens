@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Sequence
+from dataclasses import asdict
 from typing import TextIO
 
 from tokenlens.estimator import OutputMode, estimate_turn
@@ -19,6 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
     estimate.add_argument("--model", choices=available_models(), default="claude-sonnet")
     estimate.add_argument("--context-tokens", type=int, default=0)
     estimate.add_argument("--cached-context-tokens", type=int, default=0)
+    estimate.add_argument("--json", action="store_true", dest="as_json")
     estimate.add_argument(
         "--output-mode",
         choices=tuple(OutputMode),
@@ -27,14 +30,18 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _render_estimate(arguments: argparse.Namespace) -> str:
-    result = estimate_turn(
+def _estimate(arguments: argparse.Namespace):
+    return estimate_turn(
         arguments.prompt,
         model=arguments.model,
         context_tokens=arguments.context_tokens,
         cached_context_tokens=arguments.cached_context_tokens,
         output_mode=arguments.output_mode,
     )
+
+
+def _render_estimate(arguments: argparse.Namespace) -> str:
+    result = _estimate(arguments)
     return "\n".join(
         (
             f"Model: {result.model}",
@@ -54,7 +61,10 @@ def main(
     arguments = build_parser().parse_args(argv)
     destination = stdout or sys.stdout
     if arguments.command == "estimate":
-        print(_render_estimate(arguments), file=destination)
+        if arguments.as_json:
+            print(json.dumps(asdict(_estimate(arguments)), sort_keys=True), file=destination)
+        else:
+            print(_render_estimate(arguments), file=destination)
     return 0
 
 
