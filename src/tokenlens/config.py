@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,6 +22,8 @@ class Settings:
 def load_settings(environment: dict[str, str] | None = None) -> Settings:
     values = os.environ if environment is None else environment
     model = values.get("TOKENLENS_MODEL", "claude-sonnet").strip()
+    if not model:
+        raise ValueError("TOKENLENS_MODEL must be non-empty")
     get_model_rates(model)
     try:
         output_mode = OutputMode(
@@ -33,9 +36,14 @@ def load_settings(environment: dict[str, str] | None = None) -> Settings:
         budget = float(raw_budget)
     except ValueError as exc:
         raise ValueError("TOKENLENS_WARNING_BUDGET_USD must be a number") from exc
-    history_path = Path(
-        values.get("TOKENLENS_HISTORY_PATH", ".tokenlens/history.jsonl").strip()
-    )
+    if not math.isfinite(budget) or budget < 0:
+        raise ValueError("TOKENLENS_WARNING_BUDGET_USD must be finite and non-negative")
+    raw_history_path = values.get(
+        "TOKENLENS_HISTORY_PATH", ".tokenlens/history.jsonl"
+    ).strip()
+    if not raw_history_path:
+        raise ValueError("TOKENLENS_HISTORY_PATH must be non-empty")
+    history_path = Path(raw_history_path)
     return Settings(
         default_model=model,
         output_mode=output_mode,
