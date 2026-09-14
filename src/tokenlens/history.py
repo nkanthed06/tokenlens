@@ -20,6 +20,14 @@ class EstimateRecord:
     total_cost: float
 
 
+@dataclass(frozen=True, slots=True)
+class HistorySummary:
+    estimates: int
+    total_tokens: int
+    total_cost: float
+    average_cost: float
+
+
 def record_from_estimate(
     estimate: TurnEstimate,
     *,
@@ -41,3 +49,34 @@ def append_record(path: Path, record: EstimateRecord) -> None:
     with path.open("a", encoding="utf-8") as history_file:
         history_file.write(json.dumps(asdict(record), sort_keys=True))
         history_file.write("\n")
+
+
+def read_records(path: Path) -> list[EstimateRecord]:
+    if not path.exists():
+        return []
+    records = []
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
+        if not line.strip():
+            continue
+        try:
+            payload = json.loads(line)
+            records.append(EstimateRecord(**payload))
+        except (json.JSONDecodeError, TypeError) as exc:
+            raise ValueError(f"invalid history record on line {line_number}") from exc
+    return records
+
+
+def summarize_history(records: list[EstimateRecord]) -> HistorySummary:
+    total_cost = sum(record.total_cost for record in records)
+    total_tokens = sum(
+        record.prompt_tokens + record.context_tokens + record.output_tokens
+        for record in records
+    )
+    return HistorySummary(
+        estimates=len(records),
+        total_tokens=total_tokens,
+        total_cost=total_cost,
+        average_cost=total_cost / len(records) if records else 0.0,
+    )
