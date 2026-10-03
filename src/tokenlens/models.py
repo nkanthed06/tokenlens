@@ -20,13 +20,32 @@ MODEL_CATALOG: dict[str, ModelRates] = {
     "gpt-4.1": ModelRates(2.0, 8.0, 0.5),
 }
 
+MODEL_ALIASES: dict[str, str] = {
+    "claude-3-5-haiku-latest": "claude-haiku",
+    "claude-sonnet-4": "claude-sonnet",
+    "claude-opus-4": "claude-opus",
+    "gpt-4.1-mini-2025-04-14": "gpt-4.1-mini",
+}
+
 
 def available_models() -> tuple[str, ...]:
     return tuple(sorted(MODEL_CATALOG))
 
 
+def resolve_model(model: str) -> str:
+    if not isinstance(model, str) or not model.strip():
+        raise ValueError("model must be a non-empty string")
+    normalized = model.strip().casefold()
+    if normalized in MODEL_CATALOG:
+        return normalized
+    if normalized in MODEL_ALIASES:
+        return MODEL_ALIASES[normalized]
+    raise ValueError(f"unsupported model: {model}")
+
+
 def get_model_rates(model: str) -> ModelRates:
+    resolved = resolve_model(model)
     try:
-        return MODEL_CATALOG[model]
+        return MODEL_CATALOG[resolved]
     except KeyError as exc:
         raise ValueError(f"unsupported model: {model}") from exc
