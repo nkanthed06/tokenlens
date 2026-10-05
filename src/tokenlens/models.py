@@ -12,6 +12,10 @@ class ModelRates:
     cached_input_per_million: float | None = None
 
 
+class UnsupportedModelError(ValueError):
+    """Raised when TokenLens has no explicit pricing entry for a model."""
+
+
 MODEL_CATALOG: dict[str, ModelRates] = {
     "claude-haiku": ModelRates(1.0, 5.0, 0.1),
     "claude-sonnet": ModelRates(3.0, 15.0, 0.3),
@@ -40,12 +44,12 @@ def resolve_model(model: str) -> str:
         return normalized
     if normalized in MODEL_ALIASES:
         return MODEL_ALIASES[normalized]
-    raise ValueError(f"unsupported model: {model}")
+    supported = ", ".join(available_models())
+    raise UnsupportedModelError(
+        f"unsupported model: {model}. Supported models: {supported}"
+    )
 
 
 def get_model_rates(model: str) -> ModelRates:
     resolved = resolve_model(model)
-    try:
-        return MODEL_CATALOG[resolved]
-    except KeyError as exc:
-        raise ValueError(f"unsupported model: {model}") from exc
+    return MODEL_CATALOG[resolved]

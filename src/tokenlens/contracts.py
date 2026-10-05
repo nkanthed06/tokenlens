@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from tokenlens.estimator import OutputMode
-from tokenlens.models import get_model_rates
+from tokenlens.models import resolve_model
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,7 +28,7 @@ def parse_estimate_request(payload: object) -> EstimateRequest:
     model = payload.get("model", "claude-sonnet")
     if not isinstance(model, str):
         raise ValueError("model must be a string")
-    get_model_rates(model)
+    model = resolve_model(model)
     context_tokens = _non_negative_integer(payload, "context_tokens", default=0)
     cached_context_tokens = _non_negative_integer(
         payload, "cached_context_tokens", default=0

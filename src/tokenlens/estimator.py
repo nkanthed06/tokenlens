@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from tokenlens.models import resolve_model
 from tokenlens.pricing import CostEstimate, estimate_cost
 from tokenlens.tokenizer import TokenCount, analyze_text
 
@@ -73,6 +74,7 @@ def estimate_turn(
     if cached_context_tokens > context_tokens:
         raise ValueError("cached_context_tokens cannot exceed context_tokens")
 
+    resolved_model = resolve_model(model)
     prompt_count = analyze_text(prompt)
     output_tokens = estimate_output_tokens(
         prompt_count.estimated_tokens,
@@ -81,13 +83,13 @@ def estimate_turn(
     )
     uncached_context = context_tokens - cached_context_tokens
     cost = estimate_cost(
-        model,
+        resolved_model,
         input_tokens=prompt_count.estimated_tokens + uncached_context,
         cached_input_tokens=cached_context_tokens,
         output_tokens=output_tokens,
     )
     return TurnEstimate(
-        model=model,
+        model=resolved_model,
         prompt=prompt_count,
         context_tokens=context_tokens,
         cached_context_tokens=cached_context_tokens,
