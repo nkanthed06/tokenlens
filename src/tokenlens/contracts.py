@@ -6,6 +6,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from tokenlens.estimator import OutputMode
+from tokenlens.limits import (
+    MAX_CONTEXT_TOKENS,
+    MAX_OUTPUT_TOKENS,
+    ensure_at_most,
+    ensure_prompt_within_limit,
+)
 from tokenlens.models import resolve_model
 
 
@@ -25,6 +31,7 @@ def parse_estimate_request(payload: object) -> EstimateRequest:
     prompt = payload.get("prompt")
     if not isinstance(prompt, str) or not prompt.strip():
         raise ValueError("prompt must be a non-empty string")
+    ensure_prompt_within_limit(prompt)
     model = payload.get("model", "claude-sonnet")
     if not isinstance(model, str):
         raise ValueError("model must be a string")
@@ -35,6 +42,11 @@ def parse_estimate_request(payload: object) -> EstimateRequest:
     )
     if cached_context_tokens > context_tokens:
         raise ValueError("cached_context_tokens cannot exceed context_tokens")
+    ensure_at_most(
+        context_tokens,
+        name="context_tokens",
+        maximum=MAX_CONTEXT_TOKENS,
+    )
     raw_mode = payload.get("output_mode", OutputMode.BALANCED)
     try:
         output_mode = OutputMode(raw_mode)
@@ -43,6 +55,11 @@ def parse_estimate_request(payload: object) -> EstimateRequest:
     maximum = payload.get("maximum_output_tokens")
     if maximum is not None:
         maximum = _positive_integer(maximum, "maximum_output_tokens")
+        ensure_at_most(
+            maximum,
+            name="maximum_output_tokens",
+            maximum=MAX_OUTPUT_TOKENS,
+        )
     return EstimateRequest(
         prompt=prompt,
         model=model,

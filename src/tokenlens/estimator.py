@@ -5,6 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from tokenlens.limits import (
+    MAX_CONTEXT_TOKENS,
+    MAX_OUTPUT_TOKENS,
+    ensure_at_most,
+    ensure_prompt_within_limit,
+)
 from tokenlens.models import resolve_model
 from tokenlens.pricing import CostEstimate, estimate_cost
 from tokenlens.tokenizer import TokenCount, analyze_text
@@ -53,6 +59,11 @@ def estimate_output_tokens(
         return estimate
     if not isinstance(maximum, int) or isinstance(maximum, bool) or maximum <= 0:
         raise ValueError("maximum must be a positive integer")
+    ensure_at_most(
+        maximum,
+        name="maximum",
+        maximum=MAX_OUTPUT_TOKENS,
+    )
     return min(estimate, maximum)
 
 
@@ -73,6 +84,13 @@ def estimate_turn(
             raise ValueError(f"{name} must be a non-negative integer")
     if cached_context_tokens > context_tokens:
         raise ValueError("cached_context_tokens cannot exceed context_tokens")
+    ensure_at_most(
+        context_tokens,
+        name="context_tokens",
+        maximum=MAX_CONTEXT_TOKENS,
+    )
+    if isinstance(prompt, str):
+        ensure_prompt_within_limit(prompt)
 
     resolved_model = resolve_model(model)
     prompt_count = analyze_text(prompt)
