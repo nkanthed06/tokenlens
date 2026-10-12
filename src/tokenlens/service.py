@@ -9,6 +9,7 @@ from tokenlens.config import Settings, load_settings
 from tokenlens.contracts import parse_estimate_request
 from tokenlens.estimator import estimate_turn
 from tokenlens.history import append_record, record_from_estimate
+from tokenlens.identifiers import analysis_id_for
 from tokenlens.report import recommend
 
 
@@ -42,6 +43,7 @@ def analyze_request(
             record_from_estimate(estimate),
         )
     return {
+        "analysis_id": analysis_id_for(request),
         "estimate": asdict(estimate),
         "recommendation": asdict(recommendation),
     }
