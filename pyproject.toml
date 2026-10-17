@@ -7,6 +7,12 @@ requires-python = ">=3.11"
 [project.scripts]
 tokenlens = "tokenlens.cli:main"
 
+[project.optional-dependencies]
+dev = [
+    "build>=1.2",
+    "ruff>=0.8",
+]
+
 [build-system]
 requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"
