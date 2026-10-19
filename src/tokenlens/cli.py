@@ -18,7 +18,11 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
     estimate = subparsers.add_parser("estimate", help="estimate one AI turn")
     estimate.add_argument("prompt")
-    estimate.add_argument("--model", choices=available_models(), default="claude-sonnet")
+    estimate.add_argument(
+        "--model",
+        choices=available_models(),
+        default="claude-sonnet",
+    )
     estimate.add_argument("--context-tokens", type=int, default=0)
     estimate.add_argument("--cached-context-tokens", type=int, default=0)
     estimate.add_argument("--json", action="store_true", dest="as_json")
@@ -62,7 +66,8 @@ def main(
     destination = stdout or sys.stdout
     if arguments.command == "estimate":
         if arguments.as_json:
-            print(json.dumps(asdict(_estimate(arguments)), sort_keys=True), file=destination)
+            rendered = json.dumps(asdict(_estimate(arguments)), sort_keys=True)
+            print(rendered, file=destination)
         else:
             print(_render_estimate(arguments), file=destination)
     return 0

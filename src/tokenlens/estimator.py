@@ -54,7 +54,10 @@ def estimate_output_tokens(
         resolved_mode = OutputMode(mode)
     except ValueError as exc:
         raise ValueError(f"unsupported output mode: {mode}") from exc
-    estimate = max(_MINIMUM_OUTPUT_TOKENS, round(prompt_tokens * _OUTPUT_RATIOS[resolved_mode]))
+    estimate = max(
+        _MINIMUM_OUTPUT_TOKENS,
+        round(prompt_tokens * _OUTPUT_RATIOS[resolved_mode]),
+    )
     if maximum is None:
         return estimate
     if not isinstance(maximum, int) or isinstance(maximum, bool) or maximum <= 0:
